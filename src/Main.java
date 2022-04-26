@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
@@ -22,12 +23,12 @@ public class Main {
                 if (!monthlyReport.isMonthRepReady() || !yearlyReport.isYearRepReady()) {
                     System.out.println("\nНеобходимо считать месячные и годовой отчеты\n");
                 } else {
-                    if (compareReports.comparisonMYReports().isEmpty()) {
-                        System.out.println("\nОперация успешно завершена\n");
+                        ArrayList <String> comparisonResults = compareReports.comparisonMYReports();
+                        if (!comparisonResults.isEmpty()) {
+                            System.out.println("\nОшибки по месяцам: \n");
+                            System.out.println(comparisonResults);
                     } else {
-                        System.out.println("\nОшибки по месяцам: \n");
-                        System.out.println(compareReports.comparisonMYReports());
-                    }
+                            System.out.println("\nОперация успешно завершена\n");}
                 }
             } else if (command == 4) {
                 if (!monthlyReport.isMonthRepReady()) {
@@ -42,7 +43,7 @@ public class Main {
                 } else {
                     yearlyReport.allYearRepInfo();
                 }
-            } else if (command == 0) {
+            } else if (command == 123) {
                 System.out.println("Выход");
                 break;
 
@@ -59,6 +60,6 @@ public class Main {
         System.out.println("3 - Сверить отчёты");
         System.out.println("4 - Вывести информацию о всех месячных отчётах");
         System.out.println("5 - Вывести информацию о годовом отчёте");
-        System.out.println("0 - Выйти из программы");
+        System.out.println("123 - Выйти из программы");
     }
 }
