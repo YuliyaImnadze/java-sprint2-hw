@@ -1,8 +1,4 @@
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.DecimalFormat;
-
 import java.util.HashMap;
 
 public class YearlyReport {
@@ -14,11 +10,7 @@ public class YearlyReport {
     Months months = new Months();
     ReadFileContentsOrNull readFileContentsOrNull = new ReadFileContentsOrNull();
 
-    public boolean isYearRepReady() {
-        return yearRepReady;
-    }
-
-    public HashMap<Integer, Double[]> transformYearRep() {
+    public void transformYearRep() {
         if (readFileContentsOrNull.readFileContentsOrNull(pathYear) == null) {
             System.out.println("Данные отсутсвуют");
         } else {
@@ -40,31 +32,38 @@ public class YearlyReport {
                 yearlyReportSeparated.put(Integer.valueOf(s2[0]), sTemp); // перенос из массива в список
             }
         }
-            yearRepReady = true;
+        yearRepReady = true;
 
-            return yearlyReportSeparated;
-           }
+        System.out.println("\nСчитывание годового отчета завершено\n");
+    }
 
-        void allYearRepInfo () {
-            if (yearRepReady) {
-                String[] s1 = pathYear.split(".csv"); // отрезаем от имени файла всё до .csv
-                char[] year = new char[4];
-                s1[0].getChars(s1[0].length() - 4, s1[0].length(), year, 0); // вырезаем 4 последних символа, складываем в ch1
-                System.out.println("Данные за год: " + String.valueOf(year) + "\n-----------------");
-                Double[] profitsLoss = new Double[2];
-                profitsLoss[0] = 0.0;
-                profitsLoss[1] = 0.0;
-                for (int i = 0; i < months.getMonths().size(); i++) {
-                    Double[] s2 = yearlyReportSeparated.get(i + 1);
-                    double profit = s2[0] - s2[1];
-                    System.out.println("Прибыль за " + months.getMonths().get(i + 1) + ": " + profit + " рублей");
-                    profitsLoss[0] += s2[0];
-                    profitsLoss[1] += s2[1];
+    public boolean isYearRepReady() {
+        return yearRepReady;
+    }
 
-                }
-                DecimalFormat df = new DecimalFormat("########.##");
-                System.out.println("Средний доход: " + df.format(profitsLoss[0] / months.getMonths().size()) + " рублей");
-                System.out.println("Средний расход: " + df.format(profitsLoss[1] / months.getMonths().size()) + " рублей\n");
+    public HashMap<Integer, Double[]> getYearlyReportSeparated() {
+        return yearlyReportSeparated;
+    }
+
+    void allYearRepInfo() {
+        if (yearRepReady) {
+            String[] s1 = pathYear.split(".csv"); // отрезаем от имени файла всё до .csv
+            char[] year = new char[4];
+            s1[0].getChars(s1[0].length() - 4, s1[0].length(), year, 0); // вырезаем 4 последних символа, складываем в ch1
+            System.out.println("Данные за год: " + String.valueOf(year) + "\n-----------------");
+            Double[] profitsLoss = new Double[2];
+            profitsLoss[0] = 0.0;
+            profitsLoss[1] = 0.0;
+            for (int i = 0; i < months.getMonths().size(); i++) {
+                Double[] s2 = yearlyReportSeparated.get(i + 1);
+                double profit = s2[0] - s2[1];
+                System.out.println("Прибыль за " + months.getMonths().get(i + 1) + ": " + profit + " рублей");
+                profitsLoss[0] += s2[0];
+                profitsLoss[1] += s2[1];
             }
+            DecimalFormat df = new DecimalFormat("########.##");
+            System.out.println("Средний доход: " + df.format(profitsLoss[0] / months.getMonths().size()) + " рублей");
+            System.out.println("Средний расход: " + df.format(profitsLoss[1] / months.getMonths().size()) + " рублей\n");
         }
     }
+}

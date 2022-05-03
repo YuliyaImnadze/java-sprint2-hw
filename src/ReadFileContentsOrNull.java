@@ -3,7 +3,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ReadFileContentsOrNull {
-    public String readFileContentsOrNull(String path) { // "1 - Считать все месячные отчёты"
+    public String readFileContentsOrNull(String path) {
         try {
             return Files.readString(Path.of(path));
         } catch (IOException e) {

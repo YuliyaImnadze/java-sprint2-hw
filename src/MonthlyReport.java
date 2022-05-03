@@ -4,45 +4,41 @@ import java.util.HashMap;
 
 
 public class MonthlyReport {
+
     String pathMonths = "";
-    HashMap<String, ArrayList<String>> monthRep = new HashMap<>();
-    ArrayList<String> linesSeparation;
     String[] fileContents = new String[3];
     boolean monthRepReady = false; // индикатор того, что файлы с месячным отчетом считались
+    boolean isFileSplit = false; // переменная, чтобы не вызывать метод Split дважды
+
     double[][] profitsLossAllMonths = new double[3][2];// общие доходы и расходы за каждый месяц
-    HashMap<String, ArrayList<String>> allItemsForYear = new HashMap<>();
-    HashMap<String, ArrayList<Boolean>> allExpsForYear = new HashMap<>();
-    HashMap<String, ArrayList<Double>> allQuantsForYear = new HashMap<>();
-    HashMap<String, ArrayList<Integer>> allSumsForYear = new HashMap<>();
-
-    Months months = new Months();
-    ReadFileContentsOrNull readFileContentsOrNull = new ReadFileContentsOrNull();
-
+    HashMap<Integer, ArrayList<MonthlyReportItem>> allDataFromMRByMonth = new HashMap<>();
+    HashMap<String, ArrayList<String>> monthRep = new HashMap<>();
+    ArrayList<String> linesSeparation;
     ArrayList<String> mostProfitableItemsByMonth = new ArrayList<>();
     ArrayList<Double> mostProfitsByMonth = new ArrayList<>();
     ArrayList<String> mostLosingItemsByMonth = new ArrayList<>();
     ArrayList<Double> mostLossByMonth = new ArrayList<>();
 
+    Months months = new Months();
+    ReadFileContentsOrNull readFileContentsOrNull = new ReadFileContentsOrNull();
 
-    public double[][] getProfitsLossAllMonths() {
-        return profitsLossAllMonths;
-    }
-
-
-    public HashMap<String, ArrayList<String>> splitFile() {
-
+    public void readAllMonthFiles() {
         for (int i = 1; i <= 3; i++) {
             pathMonths = "./resources/m.20210";
             pathMonths += i + ".csv";
             if (readFileContentsOrNull.readFileContentsOrNull(pathMonths) == null) {
                 System.out.println("Данные за " + months.getMonths().get(i) + " отсутсвуют");
-                System.exit (1);
+                System.exit(1);
             } else {
+
+                fileContents[i - 1] = readFileContentsOrNull.readFileContentsOrNull(pathMonths);
             }
-            fileContents[i - 1] = readFileContentsOrNull.readFileContentsOrNull(pathMonths);
-
         }
+        monthRepReady = true;
+        System.out.println("\nСчитывание месячных отчетов завершено\n");
+    }
 
+    public void splitFile() {
         String[] line;
         for (int i = 0; i < fileContents.length; i++) {
             String[] lines = fileContents[i].split(System.lineSeparator());
@@ -53,8 +49,25 @@ public class MonthlyReport {
             }
             monthRep.put(String.valueOf((i + 1)), linesSeparation);
         }
-        monthRepReady = true;
-        return monthRep;
+
+        for (int i = 0; i < months.getMonths().size(); i++) {
+            ArrayList<String> mRep = monthRep.get(String.valueOf((i + 1)));
+            ArrayList<MonthlyReportItem> allDataFromMonthRep = new ArrayList<>();
+            for (int k = 0; k < mRep.size(); k += 4) {
+                MonthlyReportItem mRI = new MonthlyReportItem();
+                mRI.itemName = mRep.get(k);
+                mRI.isExpense = Boolean.valueOf(mRep.get(k + 1));
+                mRI.quantity = Double.valueOf(mRep.get(k + 2));
+                mRI.sumOfOne = Integer.valueOf(mRep.get(k + 3));
+                allDataFromMonthRep.add(mRI);
+            }
+            allDataFromMRByMonth.put(i + 1, allDataFromMonthRep);
+            isFileSplit = true;
+        }
+    }
+
+    public boolean isFileSplit() {
+        return isFileSplit;
     }
 
     public boolean isMonthRepReady() {
@@ -62,21 +75,8 @@ public class MonthlyReport {
     }
 
     public void getMaxSumAndItem() {
-
-        for (int i = 0; i < months.getMonths().size(); i++) {
-            ArrayList<String> allItems = new ArrayList<>();
-            ArrayList<Boolean> allExps = new ArrayList<>();
-            ArrayList<Double> allQuants = new ArrayList<>();
-            ArrayList<Integer> allSums = new ArrayList<>();
-            ArrayList<String> mRep = splitFile().get(String.valueOf((i + 1)));
-
-            for (int k = 0; k < mRep.size(); k += 4) {
-                allItems.add(mRep.get(k));
-                allExps.add(Boolean.valueOf(mRep.get(k + 1)));
-                allQuants.add(Double.valueOf(mRep.get(k + 2)));
-                allSums.add(Integer.valueOf(mRep.get(k + 3)));
-            }
-
+        for (int i = 0; i < allDataFromMRByMonth.size(); i++) {
+            ArrayList<MonthlyReportItem> allDataFromMonthRep = allDataFromMRByMonth.get(i + 1);
 
             int maxIndex = 0; // индекс ячейки с максимальным доходом
             int maxExpIndex = 0; // индекс ячейки с максимальной тратой
@@ -84,32 +84,29 @@ public class MonthlyReport {
             double maxExp = 0; // максимальная трата
             double profitMonth = 0; //общий доход за месяц
             double lossMonth = 0; //общий расход за месяц
-            for (int j = 0; j < allItems.size(); j++) {
-                if (!allExps.get(j)) {
-                    if (allQuants.get(j) * allSums.get(j) > maxQuantSum) {
-                        maxQuantSum = allQuants.get(j) * allSums.get(j);
+
+            for (int j = 0; j < allDataFromMonthRep.size(); j++) {
+                if (!allDataFromMonthRep.get(j).isExpense) {
+                    if (allDataFromMonthRep.get(j).quantity * allDataFromMonthRep.get(j).sumOfOne > maxQuantSum) {
+                        maxQuantSum = allDataFromMonthRep.get(j).quantity * allDataFromMonthRep.get(j).sumOfOne;
                         maxIndex = j;
                     }
-                    profitMonth += allQuants.get(j) * allSums.get(j);
+                    profitMonth += allDataFromMonthRep.get(j).quantity * allDataFromMonthRep.get(j).sumOfOne;
                 } else {
-                    if (allQuants.get(j) * allSums.get(j) > maxExp) {
-                        maxExp = allQuants.get(j) * allSums.get(j);
+                    if (allDataFromMonthRep.get(j).quantity * allDataFromMonthRep.get(j).sumOfOne > maxExp) {
+                        maxExp = allDataFromMonthRep.get(j).quantity * allDataFromMonthRep.get(j).sumOfOne;
                         maxExpIndex = j;
                     }
-                    lossMonth += allQuants.get(j) * allSums.get(j);
+                    lossMonth += allDataFromMonthRep.get(j).quantity * allDataFromMonthRep.get(j).sumOfOne;
                 }
             }
 
-            mostProfitableItemsByMonth.add(allItems.get(maxIndex));
+            mostProfitableItemsByMonth.add(allDataFromMonthRep.get(maxIndex).itemName);
             mostProfitsByMonth.add(maxQuantSum);
-            mostLosingItemsByMonth.add(allItems.get(maxExpIndex));
+            mostLosingItemsByMonth.add(allDataFromMonthRep.get(maxExpIndex).itemName);
             mostLossByMonth.add(maxExp);
             profitsLossAllMonths[i][0] = profitMonth;
             profitsLossAllMonths[i][1] = lossMonth;
-            allItemsForYear.put(months.getMonths().get(i + 1), allItems);
-            allExpsForYear.put(months.getMonths().get(i + 1), allExps);
-            allQuantsForYear.put(months.getMonths().get(i + 1), allQuants);
-            allSumsForYear.put(months.getMonths().get(i + 1), allSums);
         }
     }
 
@@ -121,6 +118,29 @@ public class MonthlyReport {
             System.out.println("-----------------");
         }
     }
+
+    public HashMap<Integer, Double[]> getTotalPL() {
+        HashMap<Integer, Double[]> hMSumPL = new HashMap<>();
+
+        for (int i = 0; i < allDataFromMRByMonth.size(); i++) {
+            ArrayList<MonthlyReportItem> allDataFromMonthRep = allDataFromMRByMonth.get(i + 1);
+            double sumP = 0;
+            double sumL = 0;
+            for (MonthlyReportItem monthlyReportItem : allDataFromMonthRep) {
+                if (monthlyReportItem.isExpense) {
+                    sumL += monthlyReportItem.sumOfOne * monthlyReportItem.quantity;
+                } else {
+                    sumP += monthlyReportItem.sumOfOne * monthlyReportItem.quantity;
+                }
+            }
+            Double[] mRS = new Double[2];
+            mRS[0] = sumP;
+            mRS[1] = sumL;
+            hMSumPL.put(i + 1, mRS);
+        }
+        return hMSumPL;
+    }
+
 }
 
 
